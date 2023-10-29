@@ -85,7 +85,7 @@ func main() {
 // handler functions.
 func router() http.Handler {
 	r := http.NewServeMux()
-	r.Handle("/api/getlist", api.Getlist())
-	//r.Handle("/api/getSign", api.getSign)
+	r.HandleFunc("/api/getlist", api.GetList)
+	r.HandleFunc("/api/getsign", api.GetSign)
 	return r
 }
