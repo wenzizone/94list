@@ -4,18 +4,17 @@ import (
 	"flag"
 	"github.com/facebookgo/grace/gracehttp"
 	"github.com/wenzizone/94list/backend/internal/build"
+	"github.com/wenzizone/94list/backend/internal/log"
 	"github.com/wenzizone/94list/backend/internal/router/handler/api"
-	"log/slog"
 	"net"
 	"net/http"
-	"os"
 	"runtime"
 	"strconv"
 	"time"
 )
 
 var (
-	port             = flag.Int("port", 7000, "Port for which the service will run on.")
+	port             = flag.Int("port", 8080, "Port for which the service will run on.")
 	statusPort       = flag.Int("statusport", 6688, "Port of which the status service will run on.")
 	debugPort        = flag.Int("debugport", -1, "Port of which the service will export debug information.")
 	blockProfileRate = flag.Int("blockprofilerate", 0, "Rate at which the profiler profiles for blocking contentions; see 'go doc runtime.SetBlockProfileRate'.")
@@ -45,7 +44,7 @@ func noop() {
 }
 
 func main() {
-	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	//log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	//defer shutdown()
 	build.ExposeBuildInfo()
 	servers := make([]*http.Server, 0, 4)
@@ -57,7 +56,7 @@ func main() {
 		})
 	*/
 	// Include business service for ad exchange.
-	log.Info("[94list] Starting server (rev:%s) on port %d...", build.Revision(), *port)
+	log.Infof("[94list] Starting server (rev:%s) on port %d...", build.Revision(), *port)
 	s := &http.Server{
 		Addr:         net.JoinHostPort("", strconv.Itoa(*port)),
 		Handler:      router(),
@@ -69,7 +68,7 @@ func main() {
 
 	// Include debug service if debugPort is defined.
 	if *debugPort > 0 {
-		log.Info("[94list] Creating Debug server on port %d...", *debugPort)
+		log.Infof("[94list] Creating Debug server on port %d...", *debugPort)
 		runtime.SetBlockProfileRate(*blockProfileRate)
 		debugServer := &http.Server{
 			Addr:    net.JoinHostPort("", strconv.Itoa(*debugPort)),
@@ -78,7 +77,7 @@ func main() {
 		servers = append(servers, debugServer)
 	}
 	if err := gracehttp.Serve(servers...); err != nil {
-		log.Error("[94list] Failed to serve: %v.", err)
+		log.Errorf("[94list] Failed to serve: %v.", err)
 	}
 }
 
@@ -86,7 +85,7 @@ func main() {
 // handler functions.
 func router() http.Handler {
 	r := http.NewServeMux()
-	r.Handle("/api/getList", api.getList)
+	r.Handle("/api/getlist", api.Getlist())
 	//r.Handle("/api/getSign", api.getSign)
 	return r
 }
