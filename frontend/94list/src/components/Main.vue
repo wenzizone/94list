@@ -34,8 +34,14 @@
             <a-input value="/" disabled />
           </a-form-item>
 
-          <a-form-item :wrapper-col="{ offset: 8, span: 16 }">
-            <a-button type="primary" html-type="submit">Submit</a-button>
+          <a-form-item>
+            <a-space>
+              <a-button type="primary" html-type="submit">解析链接</a-button>
+              <a-button type="primary">刷新列表</a-button>
+              <a-button type="primary" disabled> 批量下载 </a-button> 
+              <a-button type="primary"> 复制当前地址 </a-button>
+            </a-space>
+            
           </a-form-item>
         </a-form>
       </a-layout-content>
