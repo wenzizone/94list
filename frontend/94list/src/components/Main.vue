@@ -1,74 +1,86 @@
 <template>
-  <el-space direction="vertical" fill=true>
-    <el-card shadow="always">
-      <template #header>
-        <div class="card-header">
-          <h2>前台解析中心 | 94list-vue-go</h2>
-        </div>
-      </template>
-      <el-form label-width="auto">
-        <div>
-          <el-form-item label="链接">
-            <el-input v-model="panUrl" @blur="handleBlur" />
-          </el-form-item>
-        </div>
-        
-        <el-form-item label="密码">
-          <el-input :value=passWd v-model="passWd"/>
-        </el-form-item>
-        <el-form-item label="当前路径">
-          <el-input v-model="path" value="/" disabled />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary">解析链接</el-button>
-          <el-button type="primary">刷新列表</el-button>
-          <el-button type="primary" disabled>批量下载</el-button>
-          <el-button type="primary">复制当前地址</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
-  
-    <el-card shadow="always">
-      <el-table :data="tableData" border style="width: 100%">
-        <el-table-column type="selection" width="40" />
-        <el-table-column prop="fileName" label="文件名" width="380" />
-        <el-table-column prop="mTime" label="修改时间" width="180" />
-        <el-table-column prop="fSize" label="文件大小" width="180"/>
-      </el-table>
-    </el-card>
-  </el-space>
+  <el-dialog
+    v-model="AnnounceSwitch"
+    title="公告"
+    width="90%"
+  >
+    <span>{{Announce}}</span>
+  </el-dialog>
+  <el-dialog v-model="DownDialog" title="解析任务列表" width="80%" >
+  <el-space wrap> 当前的UA : <el-link type="danger" @click="copy(user_agent,'已复制UA')">{{ user_agent }}</el-link></el-space><br><br>
+    <el-table :data="rw_list" show-overflow-tooltip>
+      <el-table-column property="name" label="文件名" width="180"  fixed></el-table-column>
+      <el-table-column  label="下载链接" width="480" >
+        <template #default="scope">
+          {{ scope.row.dlink }}
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" width="280">
+        <template #default="scope">
+          <template v-if="scope.row.DownState=='0'">
+            <el-button @click="copy(scope.row.dlink,'已将链接复制到粘贴板内')" type="text" size="small">复制链接</el-button>
+            <el-button type="text" size="small" @click="senddown(scope.row.dlink,scope.row.name,'6800')">发送Aria2</el-button>
+            <el-button type="text" size="small" @click="senddown(scope.row.dlink,scope.row.name,'16800')">发送Motrix</el-button>
+          </template>
+          <template v-if="scope.row.DownState=='1'">
+          </template>
+        </template>
+      </el-table-column>
+    </el-table>
+  </el-dialog>
+    
+  <el-card class="card">
+    <el-input
+      type="textarea"
+      :rows="2"
+      placeholder="需要处理的链接"
+      v-model="taskurl">
+    </el-input><br><br>
+    <el-input v-model="pass" placeholder="链接对应的密码"></el-input><br><br>
+    <el-row :gutter="5">
+      <el-button  type="primary" @click="analyze()" :loading="taskstate">解析链接</el-button>
+      <el-button  type="primary" @click="pl_down()" :loading="taskstate">批量下载</el-button>
+    </el-row>
+  </el-card><br><br>
+  <el-card>
+    <el-table
+      :data="list"
+      stripe
+      style="width: 100%"
+      @row-click="clickfile"
+      v-loading="taskstate"
+      @selection-change="SelectedRows"
+      >
+      <el-table-column
+        type="selection"
+        width="55">
+      </el-table-column>
+      <el-table-column
+        label="文件名"
+        width="280">
+        <template #default="scope">
+          <el-space wrap>
+            <img
+              :src="scope.row.isdir == '1' ? '/assets/images/file.png' : '/assets/images/unknownfile.png'"
+              style="width: 20px; height: 20px;"
+            />
+            {{ scope.row.server_filename }}
+          </el-space>
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="修改时间"
+        width="180">
+        <template #default="scope">
+          {{ formatTimestamp(scope.row.server_mtime) }}
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="大小">
+        <template #default="scope">
+          {{ formatBytes(scope.row.size) }}
+        </template>
+      </el-table-column>
+    </el-table>
+  </el-card>
 </template>
-
-<style>
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.text {
-  font-size: 14px;
-}
-
-.item {
-  margin-bottom: 18px;
-}
-</style>
-
-
-<script lang="ts" setup>
-import { ref } from 'vue'
-let panUrl = ref('')
-let passWd = ref('')
-let path = ref('')
-
-function handleBlur(e){
-  //url = e.target.value
-  console.log(e.target.value)
-  const parseUrl = new URL(e.target.value)
-  passWd = parseUrl.searchParams.get('pwd')
-  console.log(parseUrl.searchParams.get('pwd'))
-  console.log(parseUrl.origin + parseUrl.pathname)
-  panUrl = parseUrl.origin + parseUrl.pathname
-}
-</script>
